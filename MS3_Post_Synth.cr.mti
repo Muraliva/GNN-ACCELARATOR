@@ -1,0 +1,29 @@
+/filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/outputs/top.vg {1 {vlog -work work -vopt -stats=none /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/outputs/top.vg
+QuestaSim vlog 2023.2_1 Compiler 2023.05 May 12 2023
+-- Compiling module top
+
+Top level modules:
+	top
+
+} {} {}} /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/DNN_top.sv {1 {vlog -work work -vopt -sv -stats=none /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/DNN_top.sv
+QuestaSim vlog 2023.2_1 Compiler 2023.05 May 12 2023
+-- Compiling module DNN
+
+Top level modules:
+	DNN
+
+} {} {}} /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/top_tb_v1.sv {1 {vlog -work work -vopt -sv -stats=none /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/top_tb_v1.sv
+QuestaSim vlog 2023.2_1 Compiler 2023.05 May 12 2023
+-- Compiling module tb_top_v1
+
+Top level modules:
+	tb_top_v1
+
+} {} {}} /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/GNN.sv {1 {vlog -work work -vopt -sv -stats=none /filespace/p/pthirugnanas/pittu_main/Spring2024/ECE755/MS_3/GNN.sv
+QuestaSim vlog 2023.2_1 Compiler 2023.05 May 12 2023
+-- Compiling module top
+
+Top level modules:
+	top
+
+} {} {}}
