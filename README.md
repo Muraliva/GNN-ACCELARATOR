@@ -1,20 +1,105 @@
-# GNN-ACCELARATOR
-A miniature Graph Neural Network (GNN) using embedded Deep Neural Network (DNN) nodes is implemented to schedule tasks in multiprocessors. The GNN is designed as a hierarchical module consisting of embedded DNNs interacting with each other in a pipelined fashion. The logic is the synthesized and placed on a layout.
+# Milestone 3: Synthesis
+
+## 1. Download Library
+Copy the library to the MS_3_Synthesis folder:
+````
+cd MS_3_Synthesis
+cp -r /cae/apps/data/asap7PDK-2022/asap7PDK_r1p7/asap7sc7p5t_28 .
+````
+You can also find it in github:
+https://github.com/The-OpenROAD-Project/asap7
 
 
-Design Objective:
-We sought to develop the fastest possible design, within power constraints. This was demonstrated through our implementation at each design step. We optimized our pipelined design at the RTL and design-compiler level. The final values and design we arrived at is considered to be optimal for our given design objectives. 
+## 2. Complie Library
+Becasue Synopsys Design Compiler only supports .db format file for synthesis, we have to use Library Compiler to convert .lib files to .db format. We will use these libraries:
+- asap7sc7p5t_AO_RVT_TT_nldm_211120.lib
+- asap7sc7p5t_INVBUF_RVT_TT_nldm_220122.lib
+- asap7sc7p5t_OA_RVT_TT_nldm_211120.lib
+- asap7sc7p5t_SEQ_RVT_TT_nldm_220123.lib
+- asap7sc7p5t_SIMPLE_RVT_TT_nldm_211120.lib
+
+Here are the sample steps:
+````
+## unzip .gz files
+cd asap7sc7p5t_28/LIB/NLDM
+gzip -d *.gz
+
+## enviroment setup
+export LD_LIBRARY_PATH=/cae/apps/data/synopsys-2021/lc/S-2021.06/linux64/nwtn/shlib:${LD_LIBRARY_PATH}
+export TERM=xterm-basic
+source /cae/apps/env/synopsys-lc_vS-2021.06
+
+## start the library compiler
+lc_shell
+
+## complie the libraries
+read_lib <name>.lib
+write_lib <name> -format db
+
+## exit the lc_shell
+exit
+````
+
+### Trouble Shooting
+Since it's open-source library, there are some unintentional bugs. For example, when you read and write the INVBUF library:
+> lc_shell> read_lib asap7sc7p5t_INVBUF_RVT_TT_nldm_220122.lib
+> 
+> Technology library 'asap7sc7p5t_INVBUF_RVT_TT_nldm_211120' read successfully
+
+However, you can see the dates are different. It will cause the error:
+> lc_shell> write_lib asap7sc7p5t_INVBUF_RVT_TT_nldm_220122 -format db 
+>
+> Warning: The 'asap7sc7p5t_INVBUF_RVT_TT_nldm_220122' library has not been read in yet. (UIL-3)
+
+Instead, you should do:
+> lc_shell> write_lib asap7sc7p5t_INVBUF_RVT_TT_nldm_211120 -format db
+> 
+> Wrote the 'asap7sc7p5t_INVBUF_RVT_TT_nldm_211120' library to 'asap7sc7p5t_INVBUF_RVT_TT_nldm_211120.db' successfully
 
 
-RTL implementation:
-We designed our GNN via hierarchical fashion. The DNN submodules were first designed, and then connected in one, large GNN module. In order to optimize for speed, we decided to make our pipeline as wide as possible, and thus finish operations within shorter time. Thus, our design executed within 2.5 clock cycles, rather than a standard design which would take around 5-6 cycles to execute. This improved speed came at the risk of increased leakage power, and thus, we focussed on optimizing for power in the design compiler stage.
+## 3. Synthesis
+0. Return to MS_3_Synthesis directory and copy your verilog files into it.
+Check the asap7 library path in file .synopsys_dc.setup is correct.
+
+1. Setup the environment (once in each new terminal) 
+````
+export LD_LIBRARY_PATH=/cae/apps/data/synopsys-2021/lc/S-2021.06/linux64/nwtn/shlib:${LD_LIBRARY_PATH} 
+export TERM=xterm-basic 
+source /cae/apps/env/synopsys-dc_shell-vS-2021.06
+````
+
+2. Specify the source files in `./analyze.tcl`. The name of the top-level module is specified in `./syn_script.tcl` under the variable name `top`.
+
+3. Check the design constraints in `./constraints.tcl`
+   - Adjust the clock frequency, clock port name, reset port name if required
+
+4. Make sure the name of the clock matches the one in your top script.
+
+5. Make sure the name of the module matches the filename.
+
+6. Run synthesis
+````
+dc_shell -f ./syn_script.tcl -output_log_file ./dc_output.txt
+````
+
+6. Check the reports in `./reports` directory in the following order:
+   - `analyze.log`          - Reports syntactical errors in the input source files
+   - `elaborate.log`        - Elaboration binds all the source files together to create the top level design
+   - `link.log`             - Design is linked with all dependencies - any missing references are highlighted here
+   - `check_design.*.log`   - Design is linked with all dependencies - any missing references are highlighted here
+   - `synth.*.rpt`          - Area, power, timing information dumped
+
+7. Outputs are dumped in `./outputs` directory
+   - Use the netlist and SDC for APR
+
+8. Take the *.vg from the output and simulate to verify the functioanlity of the design.
 
 
 
-Synthesis:
-In order to make our design more power-efficient, we first enable clock gating for the design. This ensured that the clock was stopped in stages where the data was not toggling. In order to further reduce power, we applied an area constraint in our second compile instruction to increase the density of the circuit, and thus minimize leakage due to dissipation between interconnects. Finally, we ran several compile efforts, and set them to use the prior compile’s optimized values for each run. We successfully managed to reduce power from 2.6 mW to 2.02 mW. On observing the results of the first run, it was found that timing was being met comfortably. Seeing this as an opportunity to further improve speed, the clock period was reduced from 2000ps to 1450ps. Speed was further improved when output load was slightly reduced— it was found that this reduction did not significantly compromise power.
-
-
-Automatic Place and Route (APR):
-Once the gate-level netlist was implemented in the layout using the APR tool, we sought to optimize for power by modifying the number of standard cell rows under the constraint of DRC parameters.
-
+## 4. Simulation
+The attached `top_compile_run.tcsh` is the complete script to specify the source files, testbench, compile, optimize and run the simulation.\
+Specify your verilog files (including testbench) in line 29 of the script.\
+Check your path to library verilog files in line 32 of the script.\
+Check your testbench module name in the end of the script and `run.do`.\
+Running `source top_compile_run.tcsh -i` opens up QuestaSim in an interactive mode and adds all signals to wave.\
+Running `source top_compile_run.tcsh -c` runs QuestaSim in without GUI.
